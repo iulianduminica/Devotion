@@ -1,0 +1,34 @@
+# Normalise line endings in the repository, so a Windows clone and a Linux CI
+# runner see the same bytes. Without this, a seed script written on Windows can
+# produce CRLF inside generated SQL strings and JSON payloads.
+* text=auto eol=lf
+
+# Windows batch files, if any ever appear, must keep CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# binaries
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.sqlite binary
+*.sqlite-wal binary
+*.sqlite-shm binary
+*.db binary
+*.wasm binary
+*.gz binary
+*.tgz binary
+*.zip binary
+*.pdf binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
+
+# generated
+dist/** linguist-generated
+package-lock.json linguist-generated
+*.min.js -diff
+*.map text eol=lf

@@ -1,0 +1,80 @@
+Devotion — Personal, Non-Commercial License v1.0
+
+Copyright (c) 2026 [your name]
+
+<!-- Fill in the copyright holder above before publishing. Nothing else in this
+     file needs editing. -->
+
+PURPOSE
+
+Devotion is a local-first notes application. It is published so that people can
+use it on their own machines, read the source, learn from it, and improve it.
+It is not published to be sold, hosted as a paid service, or embedded in
+commercial products. This license reflects that intent, and nothing in this
+project should be read as granting more than it says.
+
+TERMS
+
+The work is licensed under the Creative Commons Attribution-NonCommercial 4.0
+International License. The full legal text is published by Creative Commons at:
+
+  https://creativecommons.org/licenses/by-nc/4.0/legalcode
+
+In plain language, and where this file and that license differ, this file
+governs:
+
+You are free to:
+
+  - run the software for your own personal, non-commercial use;
+  - read, study, and modify the source for personal, non-commercial use;
+  - redistribute unmodified copies, and your modified copies, for
+    non-commercial purposes, with attribution and a notice of what you changed;
+  - publish screenshots, write about it, and use it in a portfolio, a job
+    application, a talk, or a class.
+
+You may not:
+
+  - use the software, unmodified or modified, in connection with any commercial
+    activity. That includes selling it, charging for access to it, embedding it
+    in a product or internal tool that generates revenue, offering it as a paid
+    hosted service, and using it to produce deliverables for clients;
+  - remove the copyright notice, the license notice, or the attribution;
+  - sublicense the work to others under different terms.
+
+A "commercial activity" is any activity primarily intended for, or directed
+toward, commercial advantage or monetary compensation. Running this at a
+for-profit company for the company's own use is commercial use.
+
+DEPENDENCIES
+
+This software depends on third-party libraries under their own licenses,
+including BlockNote (MPL-2.0), TipTap (MIT), Mantine (MIT), Fastify (MIT),
+React (MIT), Vite (MIT) and Tailwind CSS (MIT). Those licenses permit use in
+this project; they are listed in THIRD-PARTY-NOTICES.md and their terms
+continue to apply to those libraries.
+
+Note on BlockNote: BlockNote's core packages are MPL-2.0. Its "XL" packages —
+AI integration, multi-column layouts, and exporters — are dual-licensed
+GPL-3.0 or commercial. Devotion implements its own columns, AI layer and
+exporters and depends on no XL package. Keep it that way, or the licensing of
+this project changes.
+
+COMMERCIAL LICENSING
+
+If you want to use Devotion commercially, contact the copyright holder to
+arrange a separate license. Nothing in this file prevents the holder from
+offering one.
+
+NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. TO THE MAXIMUM EXTENT PERMITTED BY
+APPLICABLE LAW, THE COPYRIGHT HOLDER IS NOT LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+Your notes are your data. This project stores them in a single SQLite file on
+your machine. Back that file up. Losing it is not covered by any warranty,
+because there is none.

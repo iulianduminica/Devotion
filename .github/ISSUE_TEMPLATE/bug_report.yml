@@ -1,0 +1,88 @@
+name: Bug report
+description: Something does not work the way it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Devotion stores everything in one SQLite file on your machine. If your
+        data is involved, say so early — it changes how urgently the issue is
+        handled.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      placeholder: A clear description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence that triggers it. Include the page or database it happens on.
+      placeholder: |
+        1. Open the 'Tasks' database
+        2. Switch to the Timeline view
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        The version matters more than it usually does: `node:sqlite` behaves
+        differently across Node releases.
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      description: "Output of `node --version`"
+      placeholder: "v24.15.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Windows, macOS, Linux, Docker, Other]
+    validations:
+      required: true
+  - type: input
+    id: devotion-version
+    attributes:
+      label: Devotion version
+      description: A tag, or the commit you built from.
+      placeholder: "v0.1.0"
+  - type: dropdown
+    id: ai
+    attributes:
+      label: Was an AI provider involved?
+      options: ["No", Strata, Ollama, "LM Studio", "OpenAI-compatible", "Not sure"]
+  - type: textarea
+    id: data
+    attributes:
+      label: Data involved
+      description: |
+        Roughly how big is the workspace (blocks, databases)? Does the bug
+        corrupt data, lose it, or only affect the display?
+        Please paste no more than a few lines of your notes — describe the rest.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console and server output
+      description: Anything from the browser console and the terminal running `npm start`. Redact anything you consider secret.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before filing
+      options:
+        - label: I reproduced this on the latest version
+          required: true
+        - label: I backed up my workspace folder (`.data/workspace`) before experimenting
+          required: true

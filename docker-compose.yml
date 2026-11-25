@@ -1,0 +1,18 @@
+services:
+  devotion:
+    build: .
+    image: devotion:0.1.0
+    container_name: devotion
+    restart: unless-stopped
+    ports:
+      # Bound to loopback on the host on purpose: Devotion is single-user and
+      # the token in the page is its only gate. Change this only if you know
+      # what you are doing and have something in front of it.
+      - "127.0.0.1:8790:8790"
+    environment:
+      DEVOTION_HOST: 0.0.0.0
+      DEVOTION_PORT: "8790"
+      DEVOTION_WORKSPACE: /data
+    volumes:
+      # Your notes. One SQLite file plus a media folder — copy this to back up.
+      - ./data:/data

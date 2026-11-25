@@ -1,0 +1,17 @@
+# build context: keep the image small and reproducible
+node_modules
+dist
+.data
+.git
+.github
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.playwright-mcp
+screenshots
+LICENSE
+README.md
+CONTRIBUTING.md
+SECURITY.md
+THIRD-PARTY-NOTICES.md

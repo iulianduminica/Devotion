@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+build/
+
+# local data: the workspace database, media blobs, and attachments
+.data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+media/
+
+# env / secrets
+.env
+.env.local
+
+# os noise
+.DS_Store
+Thumbs.db
+
+# logs
+*.log
+npm-debug.log*

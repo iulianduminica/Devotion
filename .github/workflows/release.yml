@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  image:
+    name: Build and publish the container image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Sign in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # arm64 covers a Raspberry Pi and an Apple Silicon box; both are
+          # plausible homes for a self-hosted notes app.
+          platforms: linux/amd64, linux/arm64
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  release:
+    name: Open the GitHub Release
+    needs: image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Build the bundle
+        run: |
+          npm ci
+          npm run build
+          npm run boot:check
+
+      - name: Package the web bundle
+        run: tar -czf devotion-dist-${{ github.ref_name }}.tar.gz -C dist .
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: devotion-dist-${{ github.ref_name }}.tar.gz
+          body: |
+            ## Run it
+
+            ```
+            git clone https://github.com/${{ github.repository }}.git
+            cd <repo>
+            npm ci
+            npm run build
+            npm start
+            ```
+
+            Then open http://127.0.0.1:8790. Node 24 or newer is required —
+            the workspace is stored with `node:sqlite`.
+
+            Or with Docker:
+
+            ```
+            docker run -d -p 127.0.0.1:8790:8790 -v ./data:/data \
+              ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ```

@@ -1,0 +1,47 @@
+name: Feature request
+description: An idea for something Devotion should do.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Devotion is deliberately narrow: local, single-user, single-device, no
+        cloud. The most useful feature requests start from a thing you tried to
+        do and could not.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem, in your words
+      description: What were you trying to do? What got in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What you'd like to happen
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: Workarounds, other apps, a different data model.
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Does this fit the local-first, single-user model?
+      description: |
+        Multi-device sync, sharing and collaboration are explicitly out of scope
+        — they need a server, accounts and a conflict strategy, which is a
+        different product.
+      options:
+        - "Yes — it works entirely on one machine"
+        - "Partly — it needs data from elsewhere"
+        - "No — it needs sync, sharing, or multiple users"
+    validations:
+      required: true
+  - type: textarea
+    id: contribution
+    attributes:
+      label: Would you build it?
+      description: "A PR you'd open is worth more than an idea, and `CONTRIBUTING.md` covers the layout, the checks, and the traps."
