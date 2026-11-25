@@ -5,11 +5,14 @@ databases, your settings: one SQLite file in one folder, and a media folder next
 to it. No account, no subscription, no cloud. To back everything up you copy one
 directory.
 
-I built it because every Notion clone I tried kept the worst part of Notion: the
-editor and the database were two separate systems glued together, so a row
-couldn't be a page and a page couldn't hold a real table. Here they are the same
-thing. A database row is a node in the tree, so it opens like a page and takes
-nested blocks.
+It's a personal project, free to use at home. It has most of what I wanted out of
+Notion for one person on one machine, and it doesn't have the rest.
+
+The one design decision everything else sits on: the editor and the database are
+the same system. Pages, blocks and database rows are all nodes in one tree, so a
+row opens like a page and takes nested blocks, and a page can hold a real table.
+Plenty of clones keep those two as separate systems bolted together, and that's
+where the rough edges usually come from.
 
 ![The editor: a callout, a nested list, a toggle, a code block, LaTeX, a bookmark, a table of contents and a two-column section](docs/screenshots/editor.png)
 
@@ -38,8 +41,8 @@ prints a sentence telling you to install Node 24 instead of
 `ERR_UNKNOWN_BUILTIN_MODULE`.
 
 It runs the same on Windows, macOS and Linux. CI installs, tests, builds and
-boots the real server on all three on every push, because I'd rather find out
-there than in your terminal.
+boots the real server on all three on every push, which is where I'd rather find
+a platform problem than in your issue.
 
 Prefer Docker?
 
@@ -111,11 +114,12 @@ back to keyword search and tells you that's what it's doing.
 
 The parts I care about here:
 
-Statuses describe reality. A provider reads *Ready · 1 model · 7 ms*, *Not
-running*, *No models*, *Disabled* or *Not tested*. "No models" is separate from
-"Not running" because the fix is different: pull a model, not start a server. A
-disabled provider is never probed, which is how I stopped the settings screen
-filling itself with red errors about things I had switched off on purpose.
+Statuses tell you what's true right now. A provider reads *Ready · 1 model · 7
+ms*, *Not running*, *No models*, *Disabled* or *Not tested*. "No models" is
+separate from "Not running" because the fix is different: pull a model, not start
+a server. A disabled provider is never probed, which is how I stopped the
+settings screen filling itself with red errors about things I had switched off on
+purpose.
 
 Detection does the setup. Press Detect and it probes the loopback ports local
 model servers use, Ollama, LM Studio, vLLM, llamafile, LocalAI, and offers to add
@@ -126,19 +130,18 @@ and an LM Studio serving 21 models.
 Model pickers read the provider's own list, from Ollama's `/api/tags` or the
 OpenAI `/v1/models`, searchable and keyboard-driven, with context length shown.
 Servers that don't implement `/models` get a typed fallback with the reason
-displayed, because a 404 from a single-model server is a normal Tuesday.
+displayed, which is common enough with single-model servers.
 
 Streaming, with a Stop that stops. Tokens appear as they arrive. Stop closes the
 connection, the server notices the socket close and aborts the upstream request,
 and the partial answer stays on screen for you to keep or throw away.
 
-The bar tells you what it's about to send: *"sends 33 words from this page to
-Strata at 127.0.0.1:47831"*. If the pitch is that nothing leaves your machine,
-say which machine it goes to, at the moment you decide.
+The bar says what it's about to send: *"sends 33 words from this page to Strata
+at 127.0.0.1:47831"*. That's the whole promise of a local app, so it's worth
+showing at the moment you decide.
 
-Then you choose what happens: insert below, replace the selection, discard. A
-model rewriting my paragraph without asking is how I'd stop using a feature like
-this.
+Then you choose what happens: insert below, replace the selection, discard.
+Nothing touches your text until you pick one.
 
 Every call is logged with latency, outcome and characters generated. Token counts
 are recorded when the provider reports them and kept as null when it doesn't,
@@ -146,9 +149,6 @@ which is most of the time on local servers. The UI shows characters, and tokens
 only when they exist. It never prints a zero for a number it doesn't have.
 
 ## Why it's built this way
-
-Pages, blocks and rows are all nodes in one table. That's the decision the rest
-of the app rests on.
 
 A block's position is a lexicographically ordered string, so reordering writes
 one row. Inserting repeatedly into the same gap lengthens the keys, which is
@@ -272,7 +272,7 @@ link nodes is indexed through the flattened representation this app writes.
 Content imported from other editors may index less completely.
 
 Detection knows the common local servers, not all of them. Anything else you add
-by hand, which is what every tool in this space does.
+by hand.
 
 The product is called Devotion. Internal identifiers keep the `strata-` prefix
 (`x-strata-token`, `strata-theme`, `.data/workspace`), because renaming a live
@@ -284,8 +284,7 @@ you.
 Anyone with Node 24 can run this on Windows, macOS or Linux: `npm ci && npm run
 build && npm start`.
 
-Four constraints worth knowing before you tell someone to run it on their
-grandmother's laptop.
+Four constraints to know before you point someone at it.
 
 Node 24 is a hard floor. `node:sqlite` doesn't exist in Node 20 or 22 LTS.
 

@@ -63,5 +63,6 @@ the token sees everything.
 
 No audit log of who did what, because there's only ever one who.
 
-None of these are oversights. They're what a local-first, personal tool looks
-like. A multi-user deployment needs a different application.
+These follow from the scope. One person, one machine, on a disk you own. A
+multi-user deployment would need a different app, and I'd say so plainly rather
+than pretend this one is close.
