@@ -3,15 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Local-first Notion alternative: block editor, relational databases, and pluggable local AI — one SQLite file, one process, no cloud.",
+  "description": "A local-first Notion alternative: block editor, relational databases, eight views, and pluggable on-device AI. One SQLite file, one process, no cloud.",
   "license": "SEE LICENSE IN LICENSE",
-  "homepage": "https://github.com/your-name/devotion",
+  "homepage": "https://github.com/iulianduminica/Devotion",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-name/devotion.git"
+    "url": "git+https://github.com/iulianduminica/Devotion.git"
   },
   "bugs": {
-    "url": "https://github.com/your-name/devotion/issues"
+    "url": "https://github.com/iulianduminica/Devotion/issues"
   },
   "keywords": [
     "local-first",

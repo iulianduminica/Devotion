@@ -1,7 +1,7 @@
 contact_links:
   - name: Security issue
-    url: https://github.com/your-name/devotion/security/policy
+    url: https://github.com/iulianduminica/Devotion/security/policy
     about: Please report vulnerabilities privately, not as a public issue.
   - name: Contributing guide
-    url: https://github.com/your-name/devotion/blob/main/CONTRIBUTING.md
+    url: https://github.com/iulianduminica/Devotion/blob/main/CONTRIBUTING.md
     about: Layout, the eight test suites, and the things that are easy to get wrong.

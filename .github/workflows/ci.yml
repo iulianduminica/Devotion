@@ -30,13 +30,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Require Node 24+
-        run: node -e "const m=+process.versions.node.split('.')[0]; if (m < 24) { console.error('node:sqlite needs Node 24+, got ' + process.versions.node); process.exit(1) }"
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: npm
+
+      # After setup-node, deliberately. GitHub's Windows runners ship an older
+      # system Node, so checking the version before setup-node fails the job on
+      # Windows while Linux and macOS pass. This step asserts that the runner is
+      # now running the Node the app actually needs.
+      - name: Require Node 24+
+        run: node -e "const m=+process.versions.node.split('.')[0]; if (m < 24) { console.error('node:sqlite needs Node 24+, got ' + process.versions.node); process.exit(1) }"
 
       - name: Install
         run: npm ci
