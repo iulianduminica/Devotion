@@ -1,29 +1,29 @@
 # Devotion
 
-A local-first Notion alternative. Block editor, relational databases, views
-(table, board, list, gallery, calendar, timeline, chart, form), multi-column
-layout, PDF/HTML/Markdown/CSV export, first-party templates, and pluggable
-on-device AI — running entirely on your machine, in one folder.
+Devotion is a Notion alternative that runs on your machine. Your notes, your
+databases, your settings: one SQLite file in one folder, and a media folder next
+to it. No account, no subscription, no cloud. To back everything up you copy one
+directory.
 
-No subscription, no account, no cloud. The workspace is a SQLite file plus a
-media folder; backup is a folder copy.
+I built it because every Notion clone I tried kept the worst part of Notion: the
+editor and the database were two separate systems glued together, so a row
+couldn't be a page and a page couldn't hold a real table. Here they are the same
+thing. A database row is a node in the tree, so it opens like a page and takes
+nested blocks.
 
-> Internal identifiers still use the `strata-` prefix (`x-strata-token`,
-> `strata-theme`, the `.data/workspace` path). Renaming a live protocol header
-> and storage keys would break running installs for no user benefit, so the
-> rename is deliberately at the product surface only.
+![The editor: a callout, a nested list, a toggle, a code block, LaTeX, a bookmark, a table of contents and a two-column section](docs/screenshots/editor.png)
 
----
+## Running it
 
-## Quick start
+You need Node 24. That's the whole requirement.
 
 ```bash
 npm ci
-npm run seed     # build a demo workspace in .data/workspace
+npm run seed     # a demo workspace in .data/workspace
 npm run dev      # API on :8790, app on http://127.0.0.1:5175
 ```
 
-Production shape:
+For the real thing:
 
 ```bash
 npm run build
@@ -31,147 +31,145 @@ npm start        # one server on :8790 serving the app and /api
 # → http://127.0.0.1:8790
 ```
 
-Requires **Node 24+**. It uses the built-in `node:sqlite`, so there is no
-compiler, no native module, no Electron and nothing to build for the database.
-Node 24 also runs the server's TypeScript directly, so production needs no
-transpiler. On an older Node the server exits with a sentence saying what to
-install, rather than `ERR_UNKNOWN_BUILTIN_MODULE`.
+Node 24 ships SQLite (`node:sqlite`), so there is nothing to compile, no native
+module, and no Electron. Node 24 also runs the server's TypeScript directly, so
+production has no build step for the API. If you start it on an older Node, it
+prints a sentence telling you to install Node 24 instead of
+`ERR_UNKNOWN_BUILTIN_MODULE`.
 
-**Windows, macOS and Linux.** CI runs the full suite and boots the real server
-on all three, on every push. There is no platform-specific code in the runtime
-path.
+It runs the same on Windows, macOS and Linux. CI installs, tests, builds and
+boots the real server on all three on every push, because I'd rather find out
+there than in your terminal.
 
-Docker, if you'd rather not install Node:
-
-```bash
-docker compose up --build          # loopback on the host: 127.0.0.1:8790
-# your notes live in ./data — copy that folder to back up
-```
-
-Checks:
+Prefer Docker?
 
 ```bash
-npm run typecheck
-npm run test:all   # eight suites, ~2100 assertions
-npm run boot:check # starts the real server, hits it over HTTP, shuts it down
+docker compose up --build     # bound to 127.0.0.1:8790 on the host
+# your notes end up in ./data
 ```
 
----
+## What's in it
 
-## Why it is built this way
+**The editor.** Paragraph, headings, bulleted, numbered and to-do lists, toggles,
+quotes, dividers, callouts, syntax-highlighted code, LaTeX, images, files, audio,
+bookmarks, page links, a two-to-five column layout with draggable dividers, and a
+table of contents block that outlines the page, including headings nested inside
+columns. Drag handle, slash menu, block conversion, nesting, page icons, covers,
+font switching, full width, and light, dark and system themes.
 
-**One node table for everything.** Pages, blocks and database rows are all
-nodes in one tree. A database row *is* a page, so it holds nested blocks.
-Building "the editor" and "the database" as two systems is what makes clones
-feel broken, so they were never two systems here.
+**Databases.** Title, Text, Number (plain, currency, percent, progress), Date
+with ranges, Checkbox, Select, Multi-Select, Status, URL, Email, Phone, Files,
+Relation (bidirectional and self-referencing), Formula, Rollup, Button, an
+auto-increment ID, and the four auto-metadata properties.
 
-**Fractional indexing for block order.** A block's position is a
-lexicographically-ordered string, so drag-reorder writes exactly one row.
-Repeated same-gap inserts lengthen keys (inherent to the scheme), so a parent's
-children are rebalanced when a key crosses 24 characters — scoped to one
-parent, never a whole document.
+![A 12-property table: typed cells, relation pills, rollups, footer aggregates, and columns sized to the space they have](docs/screenshots/table.png)
 
-**One write path, one append-only log.** Every mutation goes through
-`server/ops.ts` and appends to `op_log`. Undo, redo, page version history,
-trash/restore, backup, and future multi-device sync all derive from that log.
-A user edit is a `tx`, so undo is paragraph-granular, not per keystroke.
+**Views.** Table, Board with drag between groups, List, Gallery, Calendar,
+Timeline, Chart, Form. The timeline zooms by day, week, month and quarter, draws
+the today line, and lets you drag a bar to move it or its edge to resize it. The
+chart draws bar, line and pie as SVG I wrote by hand, with pickers for the x
+property, the y property and the aggregate, and top-12 plus Other bucketing. The
+form gives each property type a real input, validates required fields, and lets
+you reorder the fields. Every view takes multi-rule filters, multi-level sorts,
+grouping, hidden properties, and footer aggregates: count, sum, average, median,
+min, max, range, percent checked.
 
-**Typed property columns.** Each property value is spread across
-`text_v / num_v / date_v / bool_v / json_v`, so multi-rule filter, sort and
-aggregation compile to plain SQL against indexes — not JSON scraping at read
-time.
+![The timeline at month scale, with the today line and task bars](docs/screenshots/timeline.png)
 
-**FTS5 by triggers, not by hand.** The search index is maintained by SQL
-triggers on the node table, so it cannot drift from the content. Diacritics are
-folded (`Iași` is found by `iasi`).
+![The chart view: a bar chart of tasks by state, with the aggregate picker and legend](docs/screenshots/chart.png)
 
-**No `eval` in the formula engine.** Formula source is untrusted user text, so
-it is a hand-written lexer, recursive-descent parser, and tree-walking
-evaluator. Depth is capped, non-finite results throw, and the test suite scans
-the source to prove there is no `eval`, `new Function`, `import()` or
-`require()`.
+**The workspace.** Full-text search, page version history with restore, trash
+with restore and purge, server-side undo and redo wired to the titlebar and to
+Ctrl+Shift+Z and Ctrl+Y, word count and reading time in the statusbar, Markdown,
+HTML and CSV import and export, import of Notion exports, whole-workspace
+Markdown export, and PDF export. Breadcrumbs, deep links and backlinks come from
+the same tree: a mention in a paragraph shows up as a linked mention on the page
+it points at, in both directions.
 
-**AI is an adapter, and optional.** Ollama, LM Studio, any OpenAI-compatible
-endpoint, and Strata. With no provider configured, AI features are hidden —
-not broken. Workspace Q&A falls back to keyword search and says so, rather
-than failing, when no embedding provider is present.
+**Templates.** Fifteen of them, installed from the Templates panel: meeting
+notes, weekly review, project brief, product spec, bug tracker, reading list,
+content calendar, CRM, OKRs, sprint retro, daily journal, recipe, wiki article,
+habit tracker, goal tracker. Between them that's 298 blocks, 96 rows and 178
+formulas, and the seeder evaluates every formula before it reports success.
+Templates live in the panel, not in your sidebar, and using one clones its
+databases, so two bug trackers are two trackers.
 
----
+![The template library](docs/screenshots/templates.png)
 
-## Features
+## The AI
 
-**Editor** — paragraph, H1–H3, bulleted, numbered, to-do, toggle, quote,
-divider, callout, code (syntax highlighted), LaTeX, image, file, audio,
-bookmark, page links, **2–5 column layout with draggable dividers**, and a
-**table-of-contents block** that outlines the page (including headings nested
-inside columns). Drag handle, slash menu, block conversion, nesting. Page icons,
-covers, font switching, full-width, light/dark/system.
+Four actions in the editor: summarize, translate, fix grammar, change tone. Plus
+autofill for database properties, validated against the real property schema, and
+workspace Q&A over an embedding index with citations.
 
-**Wiki** — nested pages, breadcrumbs, deep links, backlinks ("Linked mentions",
-resolved to the owning page in both directions).
+Providers are adapters. Strata, Ollama, LM Studio, and anything that speaks the
+OpenAI format. With no provider configured the AI features disappear from the
+interface rather than sitting there broken. With no embedding provider, Q&A falls
+back to keyword search and tells you that's what it's doing.
 
-**Databases** — Title, Text, Number (plain/currency/percent/progress), Date
-(with ranges), Checkbox, Select, Multi-Select, Status, URL, Email, Phone,
-Files, Relation (bidirectional, self), Formula, Rollup, Button, auto-increment
-ID, and the four auto-metadata properties.
+![AI provider settings: the fleet on the left with a live status each, the selected provider on the right](docs/screenshots/ai-settings.png)
 
-**Views** — Table, Board (with drag between groups), List, Gallery, Calendar,
-**Timeline** (day/week/month/quarter scale, today line, drag to move, drag the
-edge to resize, grouped sections), **Chart** (bar/line/pie as hand-written SVG,
-with x/y property and aggregate pickers, top-12 + Other bucketing), **Form**
-(per-type inputs, required-field validation, editable field list). Multi-rule
-filter, multi-level sort, grouping, property visibility, footer aggregations
-(count, sum, avg, median, min/max, range, % checked).
+The parts I care about here:
 
-**Workspace** — full-text search, page version history with restore, trash with
-restore and purge, server-side undo/redo (the op log, wired to the titlebar and
-to Ctrl+Shift+Z / Ctrl+Y), word count and reading time in the statusbar,
-Markdown/HTML/CSV import and export, Notion-export import, whole-workspace
-Markdown export, and **PDF export** (the server renders a print-optimised
-document; the browser writes the PDF).
+Statuses describe reality. A provider reads *Ready · 1 model · 7 ms*, *Not
+running*, *No models*, *Disabled* or *Not tested*. "No models" is separate from
+"Not running" because the fix is different: pull a model, not start a server. A
+disabled provider is never probed, which is how I stopped the settings screen
+filling itself with red errors about things I had switched off on purpose.
 
-**Template library** — 15 first-party templates, installed from the Templates
-panel: Meeting notes, Weekly review, Project brief, Product spec (PRD), Bug
-tracker, Reading list, Content calendar, CRM / contacts, OKRs, Sprint retro,
-Daily journal, Recipe, Wiki article, Habit tracker, Goal tracker. Together they
-are 298 blocks, 96 rows and 178 formulas, all of which the seeder evaluates
-before it reports success.
+Detection does the setup. Press Detect and it probes the loopback ports local
+model servers use, Ollama, LM Studio, vLLM, llamafile, LocalAI, and offers to add
+whatever answers. It reads the model list, picks a chat model, and separates the
+embedding models by name so the field is prefilled. On my machine it finds Strata
+and an LM Studio serving 21 models.
 
-**Local AI** — inline summarize, translate, fix grammar, change tone; database
-property autofill validated against the real property schema; workspace Q&A
-over an embedding index with citations.
+Model pickers read the provider's own list, from Ollama's `/api/tags` or the
+OpenAI `/v1/models`, searchable and keyboard-driven, with context length shown.
+Servers that don't implement `/models` get a typed fallback with the reason
+displayed, because a 404 from a single-model server is a normal Tuesday.
 
-The AI surface is built like the tools people already use, because "it works
-with Ollama" is only useful if finding the right model is not a research
-project:
+Streaming, with a Stop that stops. Tokens appear as they arrive. Stop closes the
+connection, the server notices the socket close and aborts the upstream request,
+and the partial answer stays on screen for you to keep or throw away.
 
-- **Two-pane provider settings.** The left pane is the fleet with a live status
-  per provider — *Ready · 6 models · 12 ms*, *Not running*, *No models*,
-  *Disabled*, *Not tested*. The right pane is the selected provider: endpoint,
-  model pickers, embedding probe, key reference, latency, and the last calls it
-  made. A disabled provider is never probed, so the screen does not fill itself
-  with red errors about things you switched off on purpose.
-- **Detection.** `Detect` probes the loopback ports local model servers use
-  (Ollama, LM Studio, vLLM, llamafile, LocalAI) and offers to add what answers,
-  prefilling the chat model and the embedding model from the names it read.
-- **Model pickers** read the provider's own list — Ollama `/api/tags`,
-  OpenAI-compatible `/v1/models` — searchable, keyboard-driven, showing context
-  length. A server that does not implement `/models` gets a typed fallback with
-  the reason shown, rather than a dead end.
-- **Streaming with a Stop that stops.** Tokens render as they arrive; the Stop
-  button closes the socket, the server sees the close and aborts the upstream
-  request, and the partial answer stays available to insert or discard.
-- **The privacy line.** Before you run an action, the bar says what it will do:
-  *"sends 33 words from this page to Strata at 127.0.0.1:47831"*. On a
-  local-first app, that claim should be visible at the moment it matters.
-- **Explicit outcomes.** Insert below, replace the selection, or discard. A
-  model rewriting your paragraph without asking is the fastest way to lose
-  someone's trust.
-- **A call log.** Every request is recorded with latency, outcome, characters
-  generated, and token counts *when the provider reports them* — `null` is kept
-  as null, never rendered as a confident zero.
+The bar tells you what it's about to send: *"sends 33 words from this page to
+Strata at 127.0.0.1:47831"*. If the pitch is that nothing leaves your machine,
+say which machine it goes to, at the moment you decide.
 
----
+Then you choose what happens: insert below, replace the selection, discard. A
+model rewriting my paragraph without asking is how I'd stop using a feature like
+this.
+
+Every call is logged with latency, outcome and characters generated. Token counts
+are recorded when the provider reports them and kept as null when it doesn't,
+which is most of the time on local servers. The UI shows characters, and tokens
+only when they exist. It never prints a zero for a number it doesn't have.
+
+## Why it's built this way
+
+Pages, blocks and rows are all nodes in one table. That's the decision the rest
+of the app rests on.
+
+A block's position is a lexicographically ordered string, so reordering writes
+one row. Inserting repeatedly into the same gap lengthens the keys, which is
+inherent to the scheme, so a parent's children get rebalanced when a key passes
+24 characters. The rebalance is scoped to one parent, never the whole document.
+
+Every mutation goes through `server/ops.ts` and appends to `op_log`. Undo, redo,
+version history, trash, restore and backup all read that log. One user edit is
+one `tx`, so undo steps back a paragraph, not a keystroke.
+
+Property values live in typed columns (`text_v`, `num_v`, `date_v`, `bool_v`,
+`json_v`), so a filter with six rules compiles to SQL against indexes instead of
+parsing JSON at read time.
+
+Search is FTS5, kept in sync by SQL triggers on the node table, so the index
+can't drift from the content. Diacritics are folded: `iasi` finds `Iași`.
+
+The formula engine has no `eval`. Formula source is text a user typed, so it's a
+hand-written lexer, a recursive-descent parser and a tree-walking evaluator, with
+depth capped and non-finite results throwing. One test scans the source and fails
+if it finds `eval`, `new Function`, `import()` or `require()`.
 
 ## Layout
 
@@ -207,109 +205,110 @@ scripts/
   licenses.mjs         every dependency and its license, from node_modules
 ```
 
-**Tests** — 2107 assertions across 8 suites (data core 93, databases 132,
-formula 305, import/export 416, AI 336, view logic 473, columns 277, HTTP smoke
-75), plus `tsc --noEmit` clean and `boot:check` on Windows, macOS and Linux.
+## Tests
 
-They are plain scripts, not a framework: `tsx scripts/test-ai.ts` runs one
-suite, prints `ok`/`FAIL` lines and a summary, and exits non-zero on a failure.
+2109 assertions across eight suites: data core 95, databases 132, formula 305,
+import/export 416, AI 336, view logic 473, columns 277, HTTP smoke 75. Plus
+`tsc --noEmit` clean.
 
----
+```bash
+npm run typecheck
+npm run test:all
+npm run boot:check
+```
 
-## Security model
+They're plain scripts, no framework. `tsx scripts/test-ai.ts` runs one suite,
+prints `ok` and `FAIL` lines with a summary, and exits non-zero on a failure.
 
-The server binds `127.0.0.1`, but any page in your browser can POST to
-localhost. So every request must carry an `Origin` in the allow-list (a foreign
-page cannot forge it) **and** a per-session token printed at boot.
-`/api/bootstrap` is the only token-less route and it refuses foreign origins.
-There is no CORS wildcard and no `OPTIONS` handling.
+`boot:check` exists because the suites use Fastify's in-process `inject()`, which
+is fast and needs no port and therefore never exercises the listen path, the
+static shell, the token injection, or Node's TypeScript handling. It starts the
+real server, reads the session token out of the page the way a browser would,
+calls an authenticated route, checks that an unauthenticated one gets a 401, and
+shuts the server down.
 
----
+## Security
 
-## Known gaps
+The server binds `127.0.0.1`. That isn't enough on its own, because any page open
+in your browser can POST to localhost. So every request needs an `Origin` in the
+allow-list, which a foreign page can't forge, and a per-session token printed at
+boot. `/api/bootstrap` is the only route that needs no token, and it refuses
+foreign origins. There is no CORS wildcard and no `OPTIONS` handling.
 
-- **PDF export depends on the browser.** The server produces the print document
-  (A4/Letter, margins, repeating table headers, ink-exact colours, page-break
-  rules); the PDF itself is written by the browser's "Save as PDF". Chromium
-  does not implement CSS `@page` margin boxes, so page numbers come from the
-  browser's own header/footer, not from this app.
-- **Column resizing is verified in tests, not in a browser.** The width maths,
-  add/remove with child reattachment, and the tree mapping are covered by 277
-  assertions, and a 2-column layout was created, edited and reloaded in a real
-  browser. Dragging the divider between columns has not been exercised by hand.
-- **Multi-device sync is not built.** The op log is per-node, ordered and
-  device-stamped so CRDT sync can be added without re-plumbing, but it is not
-  there today. This is a single-device app.
-- **The Web Clipper is not built.** Markdown import (including Notion exports)
-  is the supported path in.
-- **Person and Place properties are intentionally out of scope** — single-user,
-  and geocoding needs a paid API.
-- `node:sqlite` is still labelled experimental in Node 24 and prints a warning.
-  All SQL sits behind `server/db.ts` so the driver can be swapped.
-- The FTS trigger extracts `$.text` from inline runs, so text nested inside
-  BlockNote-native link nodes is indexed via the flattened representation this
-  app writes; content imported from other editors may index less completely.
-- The product is named **Devotion**; internal identifiers keep the `strata-`
-  prefix (`x-strata-token`, `strata-theme`, `.data/workspace`) so existing
-  installs and running sessions are not broken by a cosmetic rename.
-- **Token counts are usually unavailable.** OpenAI-compatible servers report
-  `usage` on non-streaming responses; most local servers do not, and streaming
-  responses rarely carry it. The UI shows characters, which are always real, and
-  tokens only when the provider sends them. It never displays a zero for a
-  number it does not have.
-- **Detection knows the common local servers, not all of them.** It probes
-  Ollama, LM Studio, vLLM, llamafile and LocalAI on loopback. Anything else is
-  added by hand, which is the same answer every tool in this space gives.
+An API key is never written to the database. A provider stores a reference that
+resolves at request time, and anything key-shaped arriving in a settings payload
+is dropped with a warning. Errors are redacted before they reach a log line or
+the screen.
 
----
+## What's missing
+
+I'd rather list this than have you find it.
+
+PDF export depends on the browser. The server renders a print-optimised document
+with A4 or Letter sizing, margins, repeating table headers, ink-exact colours and
+page-break rules, and the browser writes the PDF through Save as PDF. Chromium
+doesn't implement CSS `@page` margin boxes, so page numbers come from the
+browser's own header and footer.
+
+Column resizing is tested, not hand-walked. The width maths, adding and removing
+columns with their children reattached, and the tree mapping are covered by 277
+assertions, and I built, edited and reloaded a two-column layout in a real
+browser. Dragging the divider between two columns by hand, I haven't.
+
+Multi-device sync isn't built. The op log is per-node, ordered and device-stamped
+so CRDT sync can be added without re-plumbing, but today this is a single-device
+app.
+
+There's no web clipper. Markdown import, including Notion exports, is the way in.
+
+Person and Place properties are out of scope on purpose: one user, and geocoding
+needs a paid API.
+
+`node:sqlite` is still labelled experimental in Node 24 and prints a warning. All
+SQL sits behind `server/db.ts` so the driver can be swapped.
+
+The FTS trigger reads `$.text` from inline runs, so text inside BlockNote-native
+link nodes is indexed through the flattened representation this app writes.
+Content imported from other editors may index less completely.
+
+Detection knows the common local servers, not all of them. Anything else you add
+by hand, which is what every tool in this space does.
+
+The product is called Devotion. Internal identifiers keep the `strata-` prefix
+(`x-strata-token`, `strata-theme`, `.data/workspace`), because renaming a live
+protocol header and the storage path breaks running installs for no benefit to
+you.
 
 ## Deploying
 
-**Anyone with Node 24 can run this on Windows, macOS or Linux.** There is no
-native module, no Rust, no Electron, and nothing to compile: SQLite ships inside
-Node, and Node 24 runs the server's TypeScript directly. The install is
-`npm ci && npm run build && npm start`.
+Anyone with Node 24 can run this on Windows, macOS or Linux: `npm ci && npm run
+build && npm start`.
 
-The constraints, stated honestly:
+Four constraints worth knowing before you tell someone to run it on their
+grandmother's laptop.
 
-- **Node 24 is a hard floor.** `node:sqlite` does not exist in Node 20/22 LTS.
-  The server checks the version and exits with a sentence, not a stack trace.
-- **Single-user, single-device.** The session token is embedded in the HTML
-  shell, and there are no accounts. It binds `127.0.0.1`; `DEVOTION_HOST` can
-  change that, and the banner warns when it does. It is not built to face the
-  internet and should not be put there.
-- **No encryption at rest.** The workspace is a plain SQLite file. Back up the
-  folder; use a full-disk-encrypted disk.
-- **Windows file locks.** An open SQLite file blocks deletion, which matters for
-  the seed scripts. Documented in `CONTRIBUTING.md`.
+Node 24 is a hard floor. `node:sqlite` doesn't exist in Node 20 or 22 LTS.
 
-The release workflow publishes a multi-arch container image (`linux/amd64`,
-`linux/arm64`) to GHCR on every tag, plus a GitHub Release with the built web
-bundle.
+It's single-user and single-device. The session token is in the HTML shell and
+there are no accounts. It binds `127.0.0.1`; `DEVOTION_HOST` changes that, and
+the startup banner warns you when it does. Don't put this on the internet.
 
----
+Nothing is encrypted at rest. The workspace is a plain SQLite file, so keep it on
+a full-disk-encrypted disk.
 
-## Screenshots
+On Windows, an open SQLite file blocks deletion, which matters for the seed
+scripts. `CONTRIBUTING.md` covers it.
 
-The dark theme is the design default; light and system are supported.
-
-| | |
-| --- | --- |
-| `docs/screenshots/editor.png` | The block editor: callouts, nested lists, toggles, code, LaTeX, a table of contents and a two-column section |
-| `docs/screenshots/table.png` | A 12-property database table: typed cells, relation pills, rollups, footer aggregates, columns that fit the column they are in |
-| `docs/screenshots/timeline.png` | The timeline view at month scale, with the today line and drag-to-move |
-| `docs/screenshots/chart.png` | A chart view: bar, line and pie drawn as hand-written SVG |
-| `docs/screenshots/templates.png` | The template library: 15 first-party templates, each cloned independently on use |
-| `docs/screenshots/ai-settings.png` | AI provider settings: two panes, live status per provider, model pickers, latency, and the call log |
-
----
+Tagging a release publishes a multi-arch container image (`linux/amd64`,
+`linux/arm64`) to GHCR and a GitHub Release with the built web bundle.
 
 ## License
 
-Personal, non-commercial use only — see [LICENSE](LICENSE). The short version:
-use it at home, read the source, learn from it, modify it, write about it, put
-it in a portfolio. Do not sell it, host it for pay, or embed it in a commercial
-product; contact the maintainer if you want to.
+Personal, non-commercial use. See [LICENSE](LICENSE). The short version: use it
+at home, read the source, change it, write about it, put it in a portfolio. Don't
+sell it, host it for pay, or ship it inside a commercial product. Talk to me if
+you want to.
 
-Dependencies and their licenses, including the BlockNote XL licensing boundary,
-are documented in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) lists the dependencies and their
+licenses, including the BlockNote licensing boundary that keeps this project's
+license tenable.
