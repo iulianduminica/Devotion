@@ -270,8 +270,9 @@ const timeline = createView(db, tasks.databaseId, "Timeline", "timeline", 4);
 updateViewSpec(db, timeline.id, {
   ...updateSpecBase(),
   // `timelineBy` is a pair, not a single id: a task has a start and an end.
-  timelineBy: { start: P["Due"]!.id, end: null },
-  scale: "month",
+  // These tasks have one date each, so the end is simply absent. The zoom
+  // scale is view state the user sets in the UI, not something to pre-bake.
+  timelineBy: { start: P["Due"]!.id },
 });
 
 const chart = createView(db, tasks.databaseId, "Chart", "chart", 5);

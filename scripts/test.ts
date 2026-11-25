@@ -692,13 +692,22 @@ section("Schema integrity");
   ), 0);
 
   const ver = db.scalar<number>("PRAGMA user_version");
-  eq("schema version stamped", ver, 1);
+  // Not pinned to a number: every new migration raises it, and the property
+  // worth testing is that the schema is stamped and that migrating again
+  // changes nothing — not which release this baseline happens to be.
+  ok("schema version stamped", typeof ver === "number" && ver >= 1, `got ${ver}`);
   ok("foreign keys enforced", db.scalar<number>("PRAGMA foreign_keys") === 1);
 
   // migrations are idempotent
   const { migrate } = await import("../server/db.ts");
   const again = migrate(db);
-  eq("re-running migrate is a no-op", again, 1);
+  eq("re-running migrate is a no-op", again, ver);
+  eq("the stamped version survives a second migrate", db.scalar<number>("PRAGMA user_version"), ver);
+  // The AI call log arrived as v2: an existing workspace must gain it.
+  ok(
+    "the ai_call table exists after migrating",
+    db.scalar<number>("SELECT count(*) c FROM sqlite_master WHERE type='table' AND name='ai_call'") === 1,
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
