@@ -1,0 +1,9 @@
+
+> devotion@0.1.0 start
+> tsx server/index.ts
+
+
+  Devotion  →  http://127.0.0.1:8790
+  workspace: C:\Users\Home\Documents\Strata\Workspace\strata-notes\.data\workspace
+  session token: 608e0b2e-1f96-4f79-86a0-40b37cedb15b
+
